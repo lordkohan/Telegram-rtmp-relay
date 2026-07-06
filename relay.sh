@@ -11,13 +11,14 @@ echo "Destino RTMP: $RTMP_URL"
 if [ -n "$VIDEO_SOURCE" ]; then
   EXT="${VIDEO_SOURCE##*.}"
   if [[ "$EXT" =~ ^(jpg|jpeg|png|bmp)$ ]]; then
-    # Forzar lectura a 5 fps y tratarla como fuente en tiempo real
-    VIDEO_INPUT="-re -loop 1 -r 5 -i $VIDEO_SOURCE"
+    # Leer la imagen ya a 5 fps para evitar drops
+    VIDEO_INPUT="-loop 1 -r 5 -i $VIDEO_SOURCE"
+    # Sin '-r' en VIDEO_OPTS porque ya viene a 5 fps
     VIDEO_OPTS="-c:v libx264 -preset ultrafast -tune stillimage -g 5 \
                  -vf scale=640:360 -pix_fmt yuv420p -b:v 200k -maxrate 250k -bufsize 500k"
     echo "Usando imagen estática: $VIDEO_SOURCE"
   else
-    VIDEO_INPUT="-re -stream_loop -1 -i $VIDEO_SOURCE"
+    VIDEO_INPUT="-stream_loop -1 -i $VIDEO_SOURCE"
     VIDEO_OPTS="-c:v libx264 -preset ultrafast -r 15 -g 30 \
                  -vf scale=640:360 -pix_fmt yuv420p -b:v 500k -maxrate 600k -bufsize 1M"
     echo "Usando video en bucle: $VIDEO_SOURCE"
