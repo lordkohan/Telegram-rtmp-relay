@@ -8,13 +8,13 @@ echo "Iniciando relay..."
 echo "Origen audio: $STREAM_URL"
 echo "Destino RTMP: $RTMP_URL"
 
-# Configuración de video (si existe VIDEO_SOURCE)
 if [ -n "$VIDEO_SOURCE" ]; then
   EXT="${VIDEO_SOURCE##*.}"
   if [[ "$EXT" =~ ^(jpg|jpeg|png|bmp)$ ]]; then
-    VIDEO_INPUT="-loop 1 -i $VIDEO_SOURCE"
-    # Codificación ligera con keyframes cada 1 s, resolución 640x360
-    VIDEO_OPTS="-c:v libx264 -preset ultrafast -tune stillimage -r 5 -g 5 \
+    # Leer la imagen ya a 5 fps para evitar drops
+    VIDEO_INPUT="-loop 1 -r 5 -i $VIDEO_SOURCE"
+    # Sin '-r' en VIDEO_OPTS porque ya viene a 5 fps
+    VIDEO_OPTS="-c:v libx264 -preset ultrafast -tune stillimage -g 5 \
                  -vf scale=640:360 -pix_fmt yuv420p -b:v 200k -maxrate 250k -bufsize 500k"
     echo "Usando imagen estática: $VIDEO_SOURCE"
   else
@@ -29,7 +29,6 @@ fi
 
 while true; do
   if [ -n "$VIDEO_SOURCE" ]; then
-    # Importante: -rtmp_live live para que el servidor sepa que es un stream en vivo
     ffmpeg -re -i "$STREAM_URL" $VIDEO_INPUT \
       -map 0:a -map 1:v \
       -c:a aac -b:a 128k -ar 44100 -ac 2 \
